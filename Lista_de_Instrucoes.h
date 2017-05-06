@@ -87,6 +87,6 @@ STOP.opcode = "14";
 STOP.num_operandos = 0;
 STOP.prox = NULL;
 
-void busca();
+void busca_instrucao();
 
 #endif
