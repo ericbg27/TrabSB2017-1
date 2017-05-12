@@ -7,7 +7,6 @@
 
 using namespace std;
 
-void imprime_erros();
 //***************************** DEFINICAO DE LISTAS ***************************************************
 
 //**************************** LISTA EQU *******************************************************
@@ -278,7 +277,7 @@ if(out.is_open() && arq.is_open()) {
 
 //*******************************************************************************************************************************
 
-        linhain.erase(linhain.length()-1,1); //Apagando espaço restante no final da linha
+        linhain.erase(linhain.length()-1,1); //Apagando espaÃ§o restante no final da linha
         if(flagIF1 == 1) { //Se achou a diretiva IF e seu operando foi diferente de 0, imprimir linha no arquivo de saida
             out << linhain;
             out << endl;
@@ -338,7 +337,6 @@ if(out.is_open() && arq.is_open()) {
                         }
                             if (flagrotulo == 0) { //Se nao houver rotulo, nao eh a diretiva EQU, o que configura um erro.
                                 err.insere_erro(6, linhacont);
-                                break;
                             }
                         for(i=k;i<tam3;i++){ //Pegando proximo operando, que deve ser a diretiva EQU
                             if(linhain.at(i) == ' ') {
@@ -349,12 +347,10 @@ if(out.is_open() && arq.is_open()) {
                         }
                         if (equ != "EQU") { //Se operando diferente de EQU, terminar execucao
                             err.insere_erro(4, linhacont);
-                            break;
                         }
                         for(i=k;i<tam3;i++) { //Pega numero apos o EQU
                             if(linhain.at(i) == ' ') {
                                  err.insere_erro(3, linhacont);
-                                break;
                             }
                             valorstr += linhain.at(i);
                         }
@@ -369,12 +365,10 @@ if(out.is_open() && arq.is_open()) {
                 if(posit > -1) {
                     if(pos != 0) { //Verificar se diretiva IF pode ter rotulo
                         err.insere_erro(6, linhacont); //!!!!
-                        break;
                     }
                     for(j=pos+3;j<linhain.length();j++) {
                         if(linha.at(j) == ' ') {
                             err.insere_erro(3, linhacont);
-                            break;
                         }
                     }
                     if(linha.length() == pos+4) { //Se operando do IF tem apenas 1 numero, verificar se eh diferente de 0
@@ -398,7 +392,6 @@ if(out.is_open() && arq.is_open()) {
                     posit = pos;
                     if(posit > -1) {
                         err.insere_erro(4, linhacont);
-                        break;
                     }
                     out << linhain;
                     out << endl;
