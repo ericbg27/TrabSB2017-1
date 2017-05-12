@@ -171,20 +171,15 @@ if(out.is_open() && arq.is_open() && in.is_open()) {
                             }
                             token += linha.at(i);
                     }
-                   // if(token.at(0) != '0' && token.at(0) != '1' && token.at(0) != '2' && token.at(0) != '3' && token.at(0) != '4' && token.at(0) != '5' && token.at(0) != '6' && token.at(0) != '7' && token.at(0) != '8' && token.at(0) != '9') {
-                        //Se o token nao comecar com numero (falta checar outras condiçoes), continuar. Caso contrario, interromper execucao e gerar erro
                         linhain += token;
                         linhain += ' ';
                         k = i;
                         token.clear();
-                    //} else {
-                    //condicao de erro vem aqui
-                    //}
             }
 
 //*******************************************************************************************************************************
 
-        linhain.erase(linhain.length()-1,1); //Apagando espaço restante no final da linha
+        linhain.erase(linhain.length()-1,1); //Apagando espaÃ§o restante no final da linha
         if(flagIF1 == 1) { //Se achou a diretiva IF mas seu operando foi diferente de 0, imprimir linha no arquivo de saida
             out << linhain;
             out << endl;
