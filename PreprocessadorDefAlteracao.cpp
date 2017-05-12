@@ -105,7 +105,7 @@ for(t=tam1-4,j=0;t<tam1;t++,j++) {
 }
 if(strtemp.compare(".asm") == 0 || strtemp.compare(".pre") == 0) { // Verifica se o arquivo esta no formato correto
 ifstream arq (str.c_str());
-fstream out ("Saida.txt", ios::out);
+fstream out ("Preproc.asm", ios::out);
 
 if(out.is_open() && arq.is_open()) {
     while(true) {
@@ -134,7 +134,7 @@ if(out.is_open() && arq.is_open()) {
                 cout << "Numero de operandos da diretiva EQU/IF invalido" << endl;
                 break;
             } else  if (flag_o == 4) {
-                cout << "Diretiva EQU na seção errada" << endl;
+                cout << "Diretiva EQU na seÃ§Ã£o errada" << endl;
                 break;
             } else if (flag_o == 5) {
                 cout << "Diretiva EQU/IF invalida" << endl;
@@ -195,7 +195,7 @@ if(out.is_open() && arq.is_open()) {
 
 //*******************************************************************************************************************************
 
-        linhain.erase(linhain.length()-1,1); //Apagando espaço restante no final da linha
+        linhain.erase(linhain.length()-1,1); //Apagando espaÃ§o restante no final da linha
         if(flagIF1 == 1) { //Se achou a diretiva IF e seu operando foi diferente de 0, imprimir linha no arquivo de saida
             out << linhain;
             out << endl;
