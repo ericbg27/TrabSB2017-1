@@ -332,6 +332,6 @@ if(out.is_open() && arq.is_open() && in.is_open()) {
 } else {
     cout << "Arquivo nao esta no formato correto" << endl;
 }
-limpa_lista();
+no.limpa_lista();
 return 0;
 }
