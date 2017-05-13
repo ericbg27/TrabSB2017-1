@@ -66,6 +66,9 @@ string EQU_List::busca_no (string label, bool& exist) { //Busca no na lista
         }
         tmp = tmp->Return_prox_rot();
     }
+    if(tmp == NULL) {
+        *aux = false;
+    }
 }
 
 void EQU_List::limpa_lista () {
@@ -202,8 +205,7 @@ ifstream arq (str.c_str());
 fstream out ("Preproc.pre", ios::out);
 
 if(out.is_open() && arq.is_open()) {
-    while(true) {
-        getline(arq, linha); //Pegando uma linha do arquivo de entrada
+    while(getline(arq,linha)) {
         linhacont++; //Incrementa contador de linha
         if(flagIF1 == 0 && flagIF2 == 1) { //Se achou a diretiva IF mas seu operando foi zero, ignorar linha
             flagIF2 = 0;
@@ -221,9 +223,6 @@ if(out.is_open() && arq.is_open()) {
         linhain.clear();
         eh_rotulo = false; //Colocando variavel em false para o caso de nova verificacao
 
-        if(arq.eof()) { //Se chegou ao fim do arquivo
-           break;
-        }
         if(linha.length() == 0) //Se a linha estiver em branco, ir para a proxima linha
             continue;
         if (linha.at(0) == ';')
@@ -246,7 +245,7 @@ if(out.is_open() && arq.is_open()) {
                         break;
                     }
                 }
-                if(i == tam2 || linha.at(i) == ';') { //Se houver apenas espacos no final da linha, ir para a proxima
+                if(i == tam2 || linha.at(i) == ';') { //Se houver apenas comentarios no final da linha, ir para a proxima
                     break;
                 }
                     for(i=k;i<tam2;i++) {//Pega token
@@ -268,11 +267,12 @@ if(out.is_open() && arq.is_open()) {
                             k = i;
                             token.clear();
                             aux.clear();
-                        }
+                        } else {
                         linhain += token;
                         linhain += ' ';
                         k = i;
                         token.clear();
+                        }
             }
 
 //*******************************************************************************************************************************
@@ -335,8 +335,8 @@ if(out.is_open() && arq.is_open()) {
                                 break;
                             }
                         }
-                            if (flagrotulo == 0) { //Se nao houver rotulo, nao eh a diretiva EQU, o que configura um erro.
-                                err.insere_erro(6, linhacont);
+                            if (flagrotulo == 0) { //Se nao houver rotulo, nao eh a diretiva EQU
+                                break;
                             }
                         for(i=k;i<tam3;i++){ //Pegando proximo operando, que deve ser a diretiva EQU
                             if(linhain.at(i) == ' ') {
@@ -345,11 +345,9 @@ if(out.is_open() && arq.is_open()) {
                             }
                             equ += linhain.at(i);
                         }
-                        if (equ != "EQU") { //Se operando diferente de EQU, terminar execucao
-                            err.insere_erro(4, linhacont);
-                        }
                         for(i=k;i<tam3;i++) { //Pega numero apos o EQU
                             if(linhain.at(i) == ' ') {
+                                 cout << "Teste1" << endl;
                                  err.insere_erro(3, linhacont);
                             }
                             valorstr += linhain.at(i);
@@ -363,28 +361,14 @@ if(out.is_open() && arq.is_open()) {
                 pos = linhain.find("IF"); //Procura diretiva IF, para verificacao
                 posit = pos;
                 if(posit > -1) {
-                    if(pos != 0) { //Verificar se diretiva IF pode ter rotulo
-                        err.insere_erro(6, linhacont); //!!!!
-                    }
                     for(j=pos+3;j<linhain.length();j++) {
-                        if(linha.at(j) == ' ') {
+                        if(linhain.at(j) == ' ') {
                             err.insere_erro(3, linhacont);
                         }
+                        aux += linhain.at(j);
                     }
-                    if(linha.length() == pos+4) { //Se operando do IF tem apenas 1 numero, verificar se eh diferente de 0
-                        aux = linha.at(pos+3);
-                        if(atoi(aux.c_str()) != 0) {
-                            flagIF1 = 1;
-                            break;
-                        }
-                    }
-                    if(linha.length() == pos+5) { //Se operando do IF tem apenas 1 numero, verificar se eh diferente de 0
-                        for(j=pos+3;j<pos+5;j++)
-                            aux += linha.at(j);
-                         if(atoi(aux.c_str()) != 0) {
-                            flagIF1 = 1;
-                            break;
-                        }
+                    if(atoi(aux.c_str()) != 0) {
+                        flagIF1 = 1;
                     }
                     flagIF2 = 1; //Indica que entrou na diretiva IF, servindo para que nao se imprima a proxima linha
                 } else {
