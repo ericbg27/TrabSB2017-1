@@ -736,11 +736,12 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                     }
                                     straux2 += line.at(t);
                                 }
-                                if(straaux2 == "EXTERN"){
+                                if(straux2 == "EXTERN"){
                                     simb.inseresimb_final(token1, conversao.str(), true);
                                 } else {
                                     simb.inseresimb_final(token1, conversao.str(), false);
                                 }
+                                straux2.clear();
                             } else { //Se esta na TS, erro
                                 errolist.insere_erro(10, lin_cont);
                             }
@@ -798,7 +799,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                     flagel = 1;
                                 }
                                 for(t=1;t<token1.length();t++) {
-                                    if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_')){
+                                    if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_' || token1.at(t) == '+')){
                                         errolist.insere_erro(2, lin_cont);
                                         flagel = 1;
                                     }
@@ -826,7 +827,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                         flagel = 1;
                                     }
                                     for(t=1;t<token1.length();t++) {
-                                        if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_')){
+                                        if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_' || token1.at(t) == '+')){
                                             errolist.insere_erro(2, lin_cont);
                                             flagel = 1;
                                         }
@@ -862,7 +863,6 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
             lin_cont++; //Incrementando contador de linha
             if(linls.primeiralinha != NULL)
                 linls.busca_listalinhas(lin_cont,linls);
-            cout << line << endl;
             flagel = 0; //Zerando flags e contadores
             flages = 0;
             flagrot = 0;
@@ -968,7 +968,18 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                 conversao.clear();
                                 pos_cont++;
                                 conversao << pos_cont; //Convertendo contador de int para string
-                                simb.inseresimb_final(token1, conversao.str());
+                                for(t=i+1;t<line.length();t++) {
+                                    if(line.at(t) == ' '){
+                                        break;
+                                    }
+                                    straux2 += line.at(t);
+                                }
+                                if(straux2 == "EXTERN"){
+                                    simb.inseresimb_final(token1, conversao.str(), true);
+                                } else {
+                                    simb.inseresimb_final(token1, conversao.str(), false);
+                                }
+                                straux2.clear();
                                 pos_cont--;
                             } else { //Se esta na TS, erro
                                 errolist.insere_erro(10, lin_cont);
@@ -1013,7 +1024,6 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                     errolist.insere_erro(4,lin_cont);
                                 }
                                 if(opcode != "14") { //Se nao for a instrucao STOP
-
                                 if (line.at(k) == ' ')
                                     k++;
                                 token1.clear();
@@ -1026,7 +1036,6 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                         token1 += line.at(i);
                                 }
                                 pos_cont++;
-
                                 if(token1.length() > 50) { //Vericando se eh um token valido
                                     errolist.insere_erro(2,lin_cont);
                                     flagel = 1;
@@ -1036,7 +1045,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                     flagel = 1;
                                 }
                                 for(t=1;t<token1.length();t++) {
-                                    if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_')){
+                                    if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_' || token1.at(t) == '+')){
                                         errolist.insere_erro(2, lin_cont);
                                         flagel = 1;
                                     }
@@ -1069,7 +1078,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                         flagel = 1;
                                     }
                                     for(t=1;t<token1.length();t++) {
-                                        if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_')){
+                                        if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_' || token1.at(t) == '+')){
                                             errolist.insere_erro(2, lin_cont);
                                             flagel = 1;
                                         }

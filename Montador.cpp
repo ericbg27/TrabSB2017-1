@@ -723,7 +723,7 @@ void TU::limpa_TU() {
 //**************************************** FIM DA DEFINICAO DE LISTAS **********************************************
 
 //************************************** PROTOTIPOS **************************************************************************
-void Diretivas(string, Dados&, string, string, int&, int&, int&, Simbolo_Tab&, int, lista_erro&, Def_Tab&, int, string&, int&, bool&, int);
+void Diretivas(string, TU&, Dados&, string, string, int&, int&, int&, Simbolo_Tab&, int, lista_erro&, Def_Tab&, int, string&, int&, bool&, int);
 void cria_LI(Lista_Instrucoes&);
 void cria_TS(Simbolo_Tab&);
 void simb_to_def (Simbolo_Tab,Def_Tab&);
@@ -766,10 +766,10 @@ tam1 = nome.length();
 for(t=tam1-4;t<tam1;t++) {
      nometemp += nome.at(t);
 }
+
 if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verificando se o arquivo esta no formato correto
     ifstream arquivo (nome.c_str());
     fstream saida ("Saida.o", ios::out);
-
     if(saida.is_open() && arquivo.is_open()) {
          /*Aqui espera-se que a primeira linha seja a diretiva SECTION TEXT ou BEGIN. Se for BEGIN,
            procurar por SECTION TEXT. Em ambos os casos deve-se verificar se esta ultima existe.Se
@@ -812,6 +812,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                 }
                 token1 += line.at(i);
             }
+
             if(token1.length() > 50) {
                 errolist.insere_erro(2,lin_cont);
                 flagel = 1;
@@ -829,7 +830,9 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
 
             if (flagel == 0) { //Se o primeiro token eh valido
                 //Verificar se nao eh a diretiva SECTION TEXT
-                Diretivas(rotulo, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
+                if(token1 != "PUBLIC" && token1 != "SPACE") {
+                Diretivas(rotulo, TabUso, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
+
                 if(token1 == "END") {
                     errolist.insere_erro(4, lin_cont);
                 }
@@ -842,6 +845,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                 } else if(flagsec == 3) {
                     flages = 1;
                     continue;
+                }
                 }
                     if(line.at(i) == ':') { //Se eh rotulo, verificar se nao tem outro rotulo na mesma linha
                         flagrot = 1;
@@ -866,7 +870,18 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                            simb.busca_simb(token1, eh_simb);
                            if(eh_simb == false) { //Se nao esta na TS
                                 conversao << pos_cont; //Convertendo contador de int para string
-                                simb.inseresimb_final(token1, conversao.str());
+                                for(t=i+1;t<line.length();t++) {
+                                    if(line.at(t) == ' '){
+                                        break;
+                                    }
+                                    straux2 += line.at(t);
+                                }
+                                if(straux2 == "EXTERN"){
+                                    simb.inseresimb_final(token1, conversao.str(), true);
+                                } else {
+                                    simb.inseresimb_final(token1, conversao.str(), false);
+                                }
+                                straux2.clear();
                             } else { //Se esta na TS, erro
                                 errolist.insere_erro(10, lin_cont);
                             }
@@ -924,7 +939,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                     flagel = 1;
                                 }
                                 for(t=1;t<token1.length();t++) {
-                                    if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_')){
+                                    if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_' || token1.at(t) == '+')){
                                         errolist.insere_erro(2, lin_cont);
                                         flagel = 1;
                                     }
@@ -952,7 +967,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                         flagel = 1;
                                     }
                                     for(t=1;t<token1.length();t++) {
-                                        if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_')){
+                                        if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_' || token1.at(t) == '+')){
                                             errolist.insere_erro(2, lin_cont);
                                             flagel = 1;
                                         }
@@ -960,7 +975,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                 }
                                 }
                             } else {
-                                Diretivas(rotulo, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
+                                Diretivas(rotulo, TabUso, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
                                 if(token1 == "END") {
                                     errolist.insere_erro(4, lin_cont);
                                 }
@@ -1041,8 +1056,9 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
             } //Fim da verificacao de validade do token
             if (flagel == 0) { //Se o primeiro token eh valido
                 //Verificar se nao eh a diretiva SECTION TEXT
-                if(token1 != "PUBLIC"){
-                Diretivas(rotulo, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
+                if(token1 != "PUBLIC" && token1 != "SPACE") {
+                    Diretivas(rotulo, TabUso, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
+
                 if(token1 == "BEGIN") {
                     errolist.insere_erro(4, lin_cont);
                 }
@@ -1089,9 +1105,21 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                            simb.busca_simb(token1, eh_simb);
                            if(eh_simb == false) { //Se nao esta na TS
                                 conversao.str("");
+                                conversao.clear();
                                 pos_cont++;
                                 conversao << pos_cont; //Convertendo contador de int para string
-                                simb.inseresimb_final(token1, conversao.str());
+                                for(t=i+1;t<line.length();t++) {
+                                    if(line.at(t) == ' '){
+                                        break;
+                                    }
+                                    straux2 += line.at(t);
+                                }
+                                if(straux2 == "EXTERN"){
+                                    simb.inseresimb_final(token1, conversao.str(), true);
+                                } else {
+                                    simb.inseresimb_final(token1, conversao.str(), false);
+                                }
+                                straux2.clear();
                                 pos_cont--;
                             } else { //Se esta na TS, erro
                                 errolist.insere_erro(10, lin_cont);
@@ -1136,7 +1164,6 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                     errolist.insere_erro(4,lin_cont);
                                 }
                                 if(opcode != "14") { //Se nao for a instrucao STOP
-
                                 if (line.at(k) == ' ')
                                     k++;
                                 token1.clear();
@@ -1149,7 +1176,6 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                         token1 += line.at(i);
                                 }
                                 pos_cont++;
-
                                 if(token1.length() > 50) { //Vericando se eh um token valido
                                     errolist.insere_erro(2,lin_cont);
                                     flagel = 1;
@@ -1159,7 +1185,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                     flagel = 1;
                                 }
                                 for(t=1;t<token1.length();t++) {
-                                    if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_')){
+                                    if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_' || token1.at(t) == '+')){
                                         errolist.insere_erro(2, lin_cont);
                                         flagel = 1;
                                     }
@@ -1192,7 +1218,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                         flagel = 1;
                                     }
                                     for(t=1;t<token1.length();t++) {
-                                        if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_')){
+                                        if(!(isalnum(token1.at(t)) != 0 || token1.at(t) == '_' || token1.at(t) == '+')){
                                             errolist.insere_erro(2, lin_cont);
                                             flagel = 1;
                                         }
@@ -1200,7 +1226,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                 }
                                 }
                             } else {
-                                Diretivas(rotulo, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
+                                Diretivas(rotulo, TabUso, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
                                 if(token1 == "BEGIN") {
                                     errolist.insere_erro(4, lin_cont);
                                 }
@@ -1454,7 +1480,7 @@ void Diretivas(string rot, TU &tabu, Dados &D, string nom, string line, int &con
                     }
                 }
                 convert << cont_pos;
-                tabu.insere_symb(rotulo,convert.str());
+                tabu.insere_symb(rot,convert.str());
             }
             diretiva_verif = true;
         //So na segunda passagem
