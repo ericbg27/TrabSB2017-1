@@ -715,7 +715,6 @@ void code::limpa_code() {
 //************************************** Prototipo **************************************************************************
 void Diretivas(string, TU&, Dados&, string, string, int&, int&, int&, Simbolo_Tab&, int, lista_erro&, Def_Tab&, int, string&, int&, bool&, int);
 void cria_LI(Lista_Instrucoes&);
-void cria_TS(Simbolo_Tab&);
 //***************************************************************************************************************************
 
 int main () {
@@ -782,9 +781,13 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
             if(linls.primeiralinha != NULL)
                 linls.busca_listalinhas(lin_cont,linls);
              for(i=0;i<line.length();i++) {     //Pegando tokens
+                if(token1 == "SECTION" || token1 == "PUBLIC" || token1 == "EXTERN" || token1 == "BEGIN" || token1 == "END")
+                    break;
                 if(line.at(i) == ':' || line.at(i) == ' ' || i+1 == line.length() || line.at(i) == ',' || line.at(i) == '+'){
                     if(i+1 == line.length()) { //Se for o ultimo token da linha
                         token1 += line.at(i);
+                        if(token1 == "SECTION" || token1 == "PUBLIC" || token1 == "EXTERN" || token1 == "BEGIN" || token1 == "END")
+                            break;
                         if(opcode != "-1" && eh_diretiva == false) { //Se ultimo token tiver sido uma instrucao
                             straux3 = simb.busca_simb(token1, eh_simb);
                             if((opcode == "05" || opcode == "06" || opcode == "07" || opcode == "08") && eh_simb == false) { //Se for pulo e o rotulo for invalido, erro
@@ -801,21 +804,27 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                 }
                                     outline += straux3;
                                     outline += ' ';
+                                    cout << token1 << " pos: " << pos_cont << endl;
+                                    pos_cont++;
                                 }
                         } else if (opcode == "-1" && eh_diretiva == false) {
-                            opcode = inst.busca_instrucao(token1, pos_cont, lin_cont, errolist);
+                            cout << token1 << " pos: " << pos_cont << endl;
+                            opcode = inst.busca_instrucao(token1, pos_contaux, lin_cont, errolist);
                             if(opcode == "14" ) { //Se for a instrucao STOP
                                 flaginst = 1;
                                 outline += opcode;
                                 outline += ' ';
+                                pos_cont++;
                             }
                         }
                         break;
                     } else if(line.at(i) == ' ') {
-                        opcode = inst.busca_instrucao(token1,pos_cont, lin_cont, errolist);
+                        cout << token1 << " pos: " << pos_cont << endl;
+                        opcode = inst.busca_instrucao(token1,pos_contaux, lin_cont, errolist);
                         if(opcode != "-1") {
                             outline += opcode;
                             outline += ' ';
+                            pos_cont++;
                         }
                         Diretivas(rotulo, TabUso, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
                         token1.clear();
@@ -838,12 +847,15 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                         } else {
                             errolist.insere_erro(17, lin_cont);
                         }
+                        cout << token1 << " pos: " << pos_cont << endl;
                         straux3.clear();
                         token1.clear();
                         j = i+1;
+                        pos_cont++;
                         for(i=j;i<line.length();i++) {
                             token1 += line.at(i);
                         }
+                        cout << token1 << " pos: " << pos_cont << endl;
                         straux3 = simb.busca_simb(token1,eh_simb);
                         if(eh_simb == true) {
                             outline += straux3;
@@ -852,6 +864,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                             errolist.insere_erro(17, lin_cont);
                         }
                         straux3.clear();
+                        pos_cont++;
                         break;
                     } else if(line.at(i) == '+') { //Se o token for uma posicao de um vetor
                         straux3 = simb.busca_simb(token1,eh_simb); //Se for um simbolo invalido, gerar erro
@@ -881,7 +894,9 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                 outline += ' ';
                             }
                         }
-                        break;
+                         cout << token1 << " pos: " << pos_cont << endl;
+                        pos_cont++;
+                        continue;
                     }
                 }
                 token1 += line.at(i);
@@ -964,14 +979,6 @@ void Diretivas(string rot, TU &tabu, Dados &D, string nom, string line, int &con
                 }
                 auxl += line.at(i);
             }
-            /*hexadec << hex << auxl;
-            hexadec >> num;
-            if((atoi(auxl.c_str()) != 0 || num != 0)) {
-            for(i=i1;i<line.length();i++){
-                if(line.at(i) != ' ') {
-                    break;
-                }
-            }*/
             if(i >= line.length()-1) { //SPACE tem um operando ou nenhum operando
             if(auxl.length() > 0) {
                 posic = auxl.find("X");
@@ -1005,9 +1012,8 @@ void Diretivas(string rot, TU &tabu, Dados &D, string nom, string line, int &con
             } else {
                 num = 1;
             }
-            if(flagpas == 1 && num > 0) { //Se estamos na primeira passagem
-                cont_pos += num;
-            } else if(flagpas == 2 && num > 0) { //Se estamos na primeira passagem
+            cont_pos += num;
+            if(flagpas == 2 && num > 0) { //Se estamos na primeira passagem
                 for(i=0;i<num;i++) {
                     lin_saida += "00";
                     lin_saida += " ";
@@ -1091,9 +1097,7 @@ void Diretivas(string rot, TU &tabu, Dados &D, string nom, string line, int &con
             }
             auxl.clear();
             auxl2.clear();
-            if (flagpas == 1) { //Se estamos na primeira passagem
                 cont_pos += 1;
-            }
             diretiva_verif = true;
             D.insere_dados(rot,true,num,1);
         } else if (nom == "PUBLIC") {
@@ -1110,20 +1114,7 @@ void Diretivas(string rot, TU &tabu, Dados &D, string nom, string line, int &con
             diretiva_verif = true;
             defs.inseredef_final(stringaux, "0");
         } else if (nom == "EXTERN") {
-            if(flagpas == 2) {
-                posic = line.find("EXTERN");
-                posic += 7;
-                for(i=posic;i<line.length();i++) {
-                    if(line.at(i) ==  ' ') {
-                        lerr.insere_erro(3, contlinha);
-                    }
-                    auxl += line.at(i);
-                }
-                convert << cont_pos;
-                tabu.insere_symb(auxl,convert.str());
-            }
             diretiva_verif = true;
-        //So na segunda passagem
          }else if (nom == "BEGIN"){
             flagbegin = 1;
             diretiva_verif = true;
@@ -1155,11 +1146,4 @@ LI.inserefinal_instrucao("STORE","11",1);
 LI.inserefinal_instrucao("INPUT","12",1);
 LI.inserefinal_instrucao("OUTPUT","13",1);
 LI.inserefinal_instrucao("STOP","14",0);
-}
-
-void cria_TS(Simbolo_Tab &TS) {
-TS.inseresimb_final("L1", "0");
-TS.inseresimb_final("L2", "4");
-TS.inseresimb_final("L3", "7");
-TS.inseresimb_final("L4", "11");
 }
