@@ -37,6 +37,7 @@ class Simbolo_Tab { //Lista para as definicoes das diretivas EQU
         void imprime_simb();
         string busca_simb (string,bool&); //Busca no na lista a partir do rotulo
         void limpa_tabelasimb();
+        bool eh_externo(string);
 };
 
 void Simbolo_Tab::imprime_simb() {
@@ -98,6 +99,25 @@ void Simbolo_Tab::limpa_tabelasimb () {
         delete tmp;
         tmp = primeiro;
     } while(tmp != NULL);
+}
+
+bool Simbolo_Tab::eh_externo(string tok) {
+    Simbolo *sb = new Simbolo();
+    sb = primeiro;
+    while(sb != NULL) {
+        if(sb->Retorna_rot() == tok) {
+            if(sb->Retorna_ext() == true) {
+                return true;
+            } else {
+                return false;
+            }
+            break;
+        }
+        sb = sb->Retorna_proximo_rot();
+    }
+    if(sb == NULL) {
+        return false;
+    }
 }
 
 //****************************************** FIM DA TABELA DE SIMBOLOS *********************************************************
@@ -419,6 +439,7 @@ class numerolinha {
     int linum;
     numerolinha *prox_lin;
 public:
+    numerolinha () {};
     Define_linum (int lin) {linum = lin;}
     Define_proxlin (numerolinha *proxli) {prox_lin = proxli;}
     int Return_linum() {return linum;}
@@ -506,6 +527,7 @@ class Rotulo {
     int espaco_reserv;
     Rotulo *prox_rname;
 public:
+    Rotulo() {};
     void Define_rname (string rn) {rname = rn;}
     void Define_const (bool ehc) {eh_const = ehc;}
     void Define_valconst (int valc) {valor_const = valc;}
@@ -610,6 +632,7 @@ class Simb_TU {
     string value;
     Simb_TU *proxsymb;
 public:
+    Simb_TU() {};
     void Define_symbol(string s) {symbol = s;}
     void Define_value (string v) {value = v;}
     void Define_psymb (Simb_TU *psymb) {proxsymb = psymb;}
@@ -619,16 +642,16 @@ public:
 };
 
 class TU {
-    Simb_TU* symb1;
 public:
+    Simb_TU *symb1;
     TU () {
         symb1 = NULL;
     }
-    void insere_symb (string,string);
     void limpa_TU ();
+    void imprime_TU ();
 };
 
-void TU::insere_symb(string sb, string vl) {
+/*void TU::insere_symb(string sb, string vl) {
     Simb_TU *novo_symb = new Simb_TU();
     novo_symb->Simb_TU::Define_symbol(sb);
     novo_symb->Simb_TU::Define_value(vl);
@@ -642,6 +665,14 @@ void TU::insere_symb(string sb, string vl) {
         tmp->Simb_TU::Define_psymb(novo_symb);
     } else {
         symb1 = novo_symb;
+    }
+}*/
+
+void TU::imprime_TU() {
+    Simb_TU *nov = symb1;
+    while(nov != NULL) {
+    cout << nov->Return_symbol() << " = " << nov->Return_value() << endl;
+    nov = nov->Return_psymb();
     }
 }
 
@@ -715,6 +746,7 @@ void code::limpa_code() {
 //************************************** Prototipo **************************************************************************
 void Diretivas(string, TU&, Dados&, string, string, int&, int&, int&, Simbolo_Tab&, int, lista_erro&, Def_Tab&, int, string&, int&, bool&, int);
 void cria_LI(Lista_Instrucoes&);
+void insere_TU(Simbolo_Tab,TU&,int,string);
 //***************************************************************************************************************************
 
 int main () {
@@ -760,11 +792,10 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
 
     if(saida.is_open() && arquivo.is_open()) {
         flagp = 2;
-        simb.inseresimb_final("Y", "23", false);
+        simb.inseresimb_final("Y", "00", true);
         simb.inseresimb_final("T1", "27", false);
-        simb.inseresimb_final("N1", "28", false);
+        simb.inseresimb_final("N1", "00", true);
         simb.inseresimb_final("N3", "29", false);
-        data.insere_dados("Y",false,0,4);
         data.insere_dados("T1",true,0,1);
         while(getline(arquivo,line)){
             eh_diretiva = false;
@@ -804,11 +835,10 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                 }
                                     outline += straux3;
                                     outline += ' ';
-                                    cout << token1 << " pos: " << pos_cont << endl;
+                                    insere_TU(simb, TabUso, pos_cont, token1);
                                     pos_cont++;
                                 }
                         } else if (opcode == "-1" && eh_diretiva == false) {
-                            cout << token1 << " pos: " << pos_cont << endl;
                             opcode = inst.busca_instrucao(token1, pos_contaux, lin_cont, errolist);
                             if(opcode == "14" ) { //Se for a instrucao STOP
                                 flaginst = 1;
@@ -819,7 +849,6 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                         }
                         break;
                     } else if(line.at(i) == ' ') {
-                        cout << token1 << " pos: " << pos_cont << endl;
                         opcode = inst.busca_instrucao(token1,pos_contaux, lin_cont, errolist);
                         if(opcode != "-1") {
                             outline += opcode;
@@ -842,12 +871,12 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                     } else if(line.at(i) == ',') {
                         straux3 = simb.busca_simb(token1,eh_simb);
                         if(eh_simb == true) {
+                            insere_TU(simb, TabUso, pos_cont, token1);
                             outline += straux3;
                             outline += ' ';
                         } else {
                             errolist.insere_erro(17, lin_cont);
                         }
-                        cout << token1 << " pos: " << pos_cont << endl;
                         straux3.clear();
                         token1.clear();
                         j = i+1;
@@ -855,11 +884,11 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                         for(i=j;i<line.length();i++) {
                             token1 += line.at(i);
                         }
-                        cout << token1 << " pos: " << pos_cont << endl;
                         straux3 = simb.busca_simb(token1,eh_simb);
                         if(eh_simb == true) {
                             outline += straux3;
                             outline += ' ';
+                            insere_TU(simb, TabUso, pos_cont, token1);
                         } else {
                             errolist.insere_erro(17, lin_cont);
                         }
@@ -870,6 +899,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                         straux3 = simb.busca_simb(token1,eh_simb); //Se for um simbolo invalido, gerar erro
                         if(eh_simb == true) {
                             espaco = data.space(token1);
+                            insere_TU(simb, TabUso, pos_cont, token1);
                         } else {
                             errolist.insere_erro(17, lin_cont); //Operando invalido
                         }
@@ -880,7 +910,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                         }
                         pos1 = token1.find_first_not_of("0123456789",0);
                         if(pos1 == string::npos) {
-                            if(atoi(token1.c_str()) >= espaco) { //Se o espaco nao foi alocado
+                            if(atoi(token1.c_str()) >= espaco && simb.eh_externo(token1) == true) { //Se o espaco nao foi alocado para um operando nao externo
                                 errolist.insere_erro(18, lin_cont); //Endereco de memoria nao reservado
                             } else {
                                 conversao << straux3;
@@ -889,12 +919,13 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
                                 conversao.str("");
                                 conversao.clear();
                                 conversao << aux;
-                                straux4 = conversao.str();
+                                if(conversao.str().length() == 1)
+                                    straux4 += '0';
+                                straux4 += conversao.str();
                                 outline += straux4;
                                 outline += ' ';
                             }
                         }
-                         cout << token1 << " pos: " << pos_cont << endl;
                         pos_cont++;
                         continue;
                     }
@@ -910,6 +941,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
         }
     }
 }
+TabUso.imprime_TU();
 errolist.imprime_erros();
 return 0;
 }
@@ -1146,4 +1178,39 @@ LI.inserefinal_instrucao("STORE","11",1);
 LI.inserefinal_instrucao("INPUT","12",1);
 LI.inserefinal_instrucao("OUTPUT","13",1);
 LI.inserefinal_instrucao("STOP","14",0);
+}
+
+void insere_TU (Simbolo_Tab TS, TU &usot, int post, string tk) {
+    Simbolo *simbaux = new Simbolo();
+    simbaux = TS.primeiro;
+    Simb_TU *tu = new Simb_TU();
+    Simb_TU *tuaux = new Simb_TU();
+    stringstream conv;
+    while(simbaux != NULL) {
+        if(simbaux->Retorna_rot() == tk) {
+            break;
+        }
+        simbaux = simbaux->Retorna_proximo_rot();
+    }
+    if(simbaux->Retorna_ext() == true) {
+        conv.str("");
+        conv.clear();
+        if(usot.symb1 == NULL) {
+            tu->Define_symbol(tk);
+            conv << post;
+            tu->Define_value(conv.str());
+            tu->Define_psymb(NULL);
+            usot.symb1 = tu;
+        } else {
+            tu = usot.symb1;
+            while(tu->Return_psymb() != NULL) {
+               tu = tu->Return_psymb();
+            }
+            tuaux->Define_symbol(tk);
+            conv << post;
+            tuaux->Define_value(conv.str());
+            tuaux->Define_psymb(NULL);
+            tu->Define_psymb(tuaux);
+        }
+    }
 }
