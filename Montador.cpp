@@ -208,6 +208,7 @@ class erro {
     int linha_num;
     erro *prox_erro;
 public:
+    erro() {};
     Define_flag (int flag) {flag_erro = flag;}
     Define_linha (int numl) {linha_num = numl;}
     Define_proxerro (erro *proxe) {prox_erro = proxe;}
@@ -229,25 +230,37 @@ class lista_erro {
 
 void lista_erro::insere_erro(int flage, int numline) {
    erro *novo_erro;
-   erro *p = erro1, *temp;
+   erro *p = new erro();
+   p = erro1;
+   erro *temp1 = new erro();
+   erro *temp2 = new erro();
    novo_erro = new erro();
    novo_erro->Define_flag(flage);
    novo_erro->Define_linha(numline);
    novo_erro->Define_proxerro(NULL);
+   int i = 0;
    if(p == NULL) {
         erro1 = novo_erro;
    } else {
    do {
         if(novo_erro->Return_linha() < p->Return_linha()) {
-            temp = p;
-            p = novo_erro;
-            p->Define_proxerro(temp);
+            if(i == 0) {
+                temp2 = erro1;
+                erro1 = novo_erro;
+                erro1->Define_proxerro(temp2);
+                break;
+            }
+            temp1 = p;
+            temp2 = novo_erro;
+            temp2->Define_proxerro(temp1);
+            break;
         }
-            temp = p;
+            temp1 = p;
             p = p->Return_proxerro();
+            i++;
    } while(p != NULL);
    if(p == NULL) {
-        temp->Define_proxerro(novo_erro);
+        temp1->Define_proxerro(novo_erro);
    }
    }
 }
@@ -527,11 +540,14 @@ void Lista_Instrucoes::limpa_lista_inst() {
 
 class numerolinha {
     int linum;
+    string conteudo;
     numerolinha *prox_lin;
 public:
     Define_linum (int lin) {linum = lin;}
     Define_proxlin (numerolinha *proxli) {prox_lin = proxli;}
+    Define_cont (string cont) {conteudo = cont;}
     int Return_linum() {return linum;}
+    string Return_cont() {return conteudo;}
     numerolinha* Return_proxlin() {return prox_lin;}
 };
 
@@ -541,16 +557,17 @@ class lista_linhas {
     lista_linhas () {
         primeiralinha = NULL;
     }
-    void insere_numerolin(int);
-    void busca_listalinhas (int&,lista_linhas&);
+    void insere_numerolin(int,string);
+    void busca_listalinhas (int&,lista_linhas&,string,int);
     void limpa_listalin();
 };
 
-void lista_linhas::insere_numerolin(int linum1) {
+void lista_linhas::insere_numerolin(int linum1, string cont1) {
    numerolinha *nova_linha;
    numerolinha *p = primeiralinha, *temp;
    nova_linha = new numerolinha();
    nova_linha->Define_linum(linum1);
+   nova_linha->Define_cont(cont1);
    nova_linha->Define_proxlin(NULL);
    if(p == NULL) {
         primeiralinha = nova_linha;
@@ -570,14 +587,17 @@ void lista_linhas::insere_numerolin(int linum1) {
    }
 }
 
-void lista_linhas::busca_listalinhas (int &lcont, lista_linhas &ll) {
-    numerolinha *new_linha = primeiralinha;
-    numerolinha *tp;
+void lista_linhas::busca_listalinhas (int &lcont, lista_linhas &ll, string cont2, int fgp) {
+    numerolinha *new_linha = new numerolinha();
+    new_linha = primeiralinha;
+    numerolinha *tp = new numerolinha();
+    numerolinha *auxlin = new numerolinha();
     int i = 1;
+    if(fgp == 1) {
     while(new_linha != NULL) {
         if(new_linha->Return_linum() != i) {
             lcont = i;
-            ll.insere_numerolin(lcont);
+            ll.insere_numerolin(lcont,cont2);
             break;
         }
         tp = new_linha;
@@ -585,9 +605,21 @@ void lista_linhas::busca_listalinhas (int &lcont, lista_linhas &ll) {
         i++;
     }
     if(new_linha == NULL){
-        new_linha->Define_linum(lcont);
-        new_linha->Define_proxlin(NULL);
-        tp->Define_proxlin(new_linha);
+        lcont = i;
+        auxlin->Define_linum(lcont);
+        auxlin->Define_cont(cont2);
+        auxlin->Define_proxlin(NULL);
+        tp->Define_proxlin(auxlin);
+    }
+    } else if(fgp == 2) {
+        while(new_linha != NULL) {
+            if(new_linha->Return_cont() == cont2) {
+                lcont = i;
+                break;
+            }
+            new_linha = new_linha->Return_proxlin();
+            i++;
+        }
     }
 }
 
@@ -890,7 +922,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
         while(getline(arquivo,line)) {
             lin_cont++; //Incrementando contador de linha
             if(linls.primeiralinha != NULL)
-                linls.busca_listalinhas(lin_cont,linls);
+                linls.busca_listalinhas(lin_cont,linls,line,flagp);
             flagel = 0; //Zerando flags e contadores
             flages = 0;
             flagrot = 0;
@@ -1115,7 +1147,7 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
         while(getline(arquivo, line)) { //Se achou a diretiva SECTION
             lin_cont++; //Incrementando contador de linha
             if(linls.primeiralinha != NULL)
-                linls.busca_listalinhas(lin_cont,linls);
+                linls.busca_listalinhas(lin_cont,linls,line,flagp);
             flagel = 0; //Zerando flags e contadores
             flages = 0;
             flagrot = 0;
@@ -1382,9 +1414,6 @@ cout << "TS" << endl;
 simb.imprime_simb();
 cout << "TD" << endl;
 defin.imprime_def();
-cout << "TR1" << endl;
-TR.imprime_elem();
-cout << endl;
 //*********************************************** FIM DA PRIMEIRA PASSAGEM **************************************************
 arquivo.clear();
 arquivo.seekg(0, ios::beg);
@@ -1407,7 +1436,7 @@ while(getline(arquivo,line)){
             lin_cont++;
             opcode = "-1";
             if(linls.primeiralinha != NULL)
-                linls.busca_listalinhas(lin_cont,linls);
+                linls.busca_listalinhas(lin_cont,linls,line,flagp);
              for(i=0;i<line.length();i++) {     //Pegando tokens
                 if(token1 == "SECTION" || token1 == "PUBLIC" || token1 == "EXTERN" || token1 == "BEGIN" || token1 == "END")
                     break;
@@ -1664,11 +1693,8 @@ void Diretivas(string rot, Rtab &TR1, TU &tabu, Dados &D, string nom, string lin
             } else {
                 num = 1;
             }
-            cout << flagpas << endl;
             if(flagpas == 2 && num > 0) {
-                cout << "Teste" << endl;
                 for(i=0;i<num;i++) {
-                    cout << "oi" << endl;
                     TR1.insere_el(1);
                     lin_saida += "00";
                     lin_saida += " ";
@@ -1695,7 +1721,6 @@ void Diretivas(string rot, Rtab &TR1, TU &tabu, Dados &D, string nom, string lin
                 }
                 auxl += line.at(i);
             }
-
             if(auxl.length() > 1) {
             if(auxl.find("X") > -1) { //Se o numero for hexadecimal, converter para decimal e gravar na saida
                 if(auxl.at(0) == '0') {
@@ -1749,12 +1774,16 @@ void Diretivas(string rot, Rtab &TR1, TU &tabu, Dados &D, string nom, string lin
                     lin_saida += auxl2;
                     lin_saida += ' ';
                 }
+                convert << auxl;
+                convert >> num;
             }
             auxl.clear();
             auxl2.clear();
                 cont_pos++;
             diretiva_verif = true;
-            D.insere_dados(rot,true,num,1);
+            //cout << "CONST: " << num << endl;
+            if(flagpas == 1)
+                D.insere_dados(rot,true,num,1);
             if(flagpas == 2)
                 TR1.insere_el(0);
         } else if (nom == "PUBLIC") {
@@ -1851,7 +1880,7 @@ ofstream out("Preproc.pre");
         linhacont++; //Incrementa contador de linha
         if(flagIF1 == 0 && flagIF2 == 1) { //Se achou a diretiva IF mas seu operando foi zero, ignorar linha
             flagIF2 = 0;
-            LL.insere_numerolin(linhacont); //Como a linha sera apagada no pre processamento, armazenar numero
+            LL.insere_numerolin(linhacont,linha); //Como a linha sera apagada no pre processamento, armazenar numero
             continue;
         }
         token.clear(); //Limpando strings
@@ -1867,11 +1896,11 @@ ofstream out("Preproc.pre");
         eh_rotulo = false; //Colocando variavel em false para o caso de nova verificacao
 
         if(linha.length() == 0) { //Se a linha estiver em branco, ir para a proxima linha
-            LL.insere_numerolin(linhacont); //Como a linha sera apagada no pre processamento, armazenar numero
+            LL.insere_numerolin(linhacont,linha); //Como a linha sera apagada no pre processamento, armazenar numero
             continue;
         }
         if (linha.at(0) == ';') {
-            LL.insere_numerolin(linhacont); //Como a linha sera apagada no pre processamento, armazenar numero
+            LL.insere_numerolin(linhacont,linha); //Como a linha sera apagada no pre processamento, armazenar numero
             continue;
         }
         tam2 = linha.length();
@@ -1904,7 +1933,11 @@ ofstream out("Preproc.pre");
                                 linhain += ",";
                                 token.clear();
                                 i++;
+                                if(linha.at(i) == ' '){
+                                    LE.insere_erro(5,linhacont);
+                                }
                                 flagcopy = 2;
+                                break;
                             }
                             token += linha.at(i);
                     }
@@ -1921,6 +1954,7 @@ ofstream out("Preproc.pre");
                         flagcopy = 2;
                         }
                         if(flagcopy == 2) {
+                            k = i+1;
                             for(i=k;i<tam2;i++) {
                                 if(linha.at(i) != ' ') {
                                     for(j=i;j<tam2;j++) {
@@ -2069,7 +2103,7 @@ ofstream out("Preproc.pre");
                             valorstr += linhain.at(i);
                         }
                         no.insere_final(rotulo, valorstr); //Criando no na lista de rotulos da diretiva EQU
-                        LL.insere_numerolin(linhacont); //Como a linha sera apagada no pre processamento, armazenar numero
+                        LL.insere_numerolin(linhacont,linha); //Como a linha sera apagada no pre processamento, armazenar numero
                         break;
                     }
             //*********************** Fim da verificacao da diretiva EQU **********************************
@@ -2089,7 +2123,7 @@ ofstream out("Preproc.pre");
                         flagIF1 = 1;
                     }
                     flagIF2 = 1; //Indica que entrou na diretiva IF, servindo para que nao se imprima a proxima linha
-                    LL.insere_numerolin(linhacont); //Como a linha sera apagada no pre processamento, armazenar numero
+                    LL.insere_numerolin(linhacont,linha); //Como a linha sera apagada no pre processamento, armazenar numero
                     break;
                 }
             }
@@ -2100,8 +2134,6 @@ ofstream out("Preproc.pre");
     }
 //*******************************************************************************************************************************
 no.limpa_lista();
-LE.limpa_listae();
-LL.limpa_listalin();
 }
 //****************************************************** FIM DO PRE PROCESSADOR ***********************************************
 
