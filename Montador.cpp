@@ -564,25 +564,35 @@ class lista_linhas {
 
 void lista_linhas::insere_numerolin(int linum1, string cont1) {
    numerolinha *nova_linha;
-   numerolinha *p = primeiralinha, *temp;
+   numerolinha *p = new numerolinha();
+   p = primeiralinha;
+   numerolinha *temp1 = new numerolinha();
+   numerolinha *temp2 = new numerolinha();
    nova_linha = new numerolinha();
    nova_linha->Define_linum(linum1);
    nova_linha->Define_cont(cont1);
    nova_linha->Define_proxlin(NULL);
+   int i = 0;
    if(p == NULL) {
         primeiralinha = nova_linha;
    } else {
    do {
         if(nova_linha->Return_linum() < p->Return_linum()) {
-            temp = p;
-            p = nova_linha;
-            p->Define_proxlin(temp);
+            if(i == 0) {
+                temp2 = primeiralinha;
+                primeiralinha = nova_linha;
+                primeiralinha->Define_proxlin(temp2);
+            }
+            temp1 = p;
+            temp2 = nova_linha;
+            temp2->Define_proxlin(temp1);
+            break;
         }
-            temp = p;
+            temp1 = p;
             p = p->Return_proxlin();
    } while(p != NULL);
    if(p == NULL){
-        temp->Define_proxlin(nova_linha);
+        temp1->Define_proxlin(nova_linha);
    }
    }
 }
@@ -919,10 +929,12 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
            existir, gerar erros para todas as linhas anteriores.Caso contrario, gerar erro de Secao
             de texto faltante. Alem disso, faz-se as analises lexica, sintatica e semantica para cada
             linha */
+        flagp = 1;
         while(getline(arquivo,line)) {
             lin_cont++; //Incrementando contador de linha
-            if(linls.primeiralinha != NULL)
-                linls.busca_listalinhas(lin_cont,linls,line,flagp);
+        if(linls.primeiralinha != NULL) {
+            linls.busca_listalinhas(lin_cont,linls,line,flagp);
+        }
             flagel = 0; //Zerando flags e contadores
             flages = 0;
             flagrot = 0;
@@ -1424,6 +1436,7 @@ j = 0;
 k = 0;
 t = 0;
 while(getline(arquivo,line)){
+            //cout << line << endl;
             eh_diretiva = false;
             constante = false;
             eh_simb = false;
@@ -1485,10 +1498,16 @@ while(getline(arquivo,line)){
                             outline += opcode;
                             outline += ' ';
                             pos_cont++;
+                            i++;
+                        } else {
+                            Diretivas(rotulo, TR, TabUso, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
+                            i++;
                         }
-                        Diretivas(rotulo, TR, TabUso, data, token1, line, pos_cont, fbegin, fend, simb, flagp, errolist, defin, lin_cont, outline, flagsec, eh_diretiva, flagaux2);
                         token1.clear();
-                        i++;
+                      //  if(line.length() == i+1 && opcode != "-1") {//Se o simbolo nao for de um digito
+                        //    i--;
+                        //}
+                       // cout << "token: " << token1 << endl;
                     } else if(line.at(i) == ':') { //Se encontrou rotulo, ignorar
                         j = i+1;
                         for(i=j;i<line.length();i++) { //Indo para o proximo token
@@ -1564,7 +1583,11 @@ while(getline(arquivo,line)){
                         continue;
                     }
                 }
-                token1 += line.at(i);
+                    token1 += line.at(i);
+                    if(i+1 == line.length()) {
+                        i--;
+                        token1.clear();
+                    }
             }
             token1.clear();
         }
@@ -1576,6 +1599,7 @@ while(getline(arquivo,line)){
           cout << outline << endl;
           cout << "TU" << endl;
           TabUso.imprime_TU();
+          cout << "TR" << endl;
           TR.imprime_elem();
           cout << endl;
           cout << "ERROS" << endl;
