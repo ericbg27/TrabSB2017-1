@@ -364,8 +364,8 @@ public:
 };
 
 class Def_Tab { //Lista para as definicoes das diretivas EQU
-    Definicao *def1;
     public:
+        Definicao *def1;
         Def_Tab() {
             def1 = NULL;
         }
@@ -873,7 +873,10 @@ void cria_LI(Lista_Instrucoes&);
 void cria_TS(Simbolo_Tab&);
 void simb_to_def (Simbolo_Tab,Def_Tab&);
 void insere_TU(Simbolo_Tab,TU&,int,string);
-void Preprocessador(istream&,lista_erro&,lista_linhas&);
+void Preprocessador(istream&,lista_erro&,lista_linhas&,string);
+void TU_out(ostream&,TU);
+void TD_out(ostream&,Def_Tab);
+void TR_out(ostream&,Rtab);
 //***************************************************************************************************************************
 
 int main () {
@@ -886,11 +889,11 @@ Def_Tab defin;
 Lista_Instrucoes inst;
 cria_LI(inst);
 lista_linhas linls;
-string nome, nometemp, rotulo; //strings usadas para abrir o arquivo e verifica extensao
+string nome, nometemp1, rotulo; //strings usadas para abrir o arquivo e verifica extensao
 string line, outline; //strings utilizadas para as linhas
-string straux1, straux2, straux3, straux4, opcode = "-1", token1;
+string straux1, straux2, straux3, straux4, opcode = "-1", token1, saidastr, entrada;
 stringstream conversao;
-int t = 0, j = 0, i = 0, k = 0, tam1, aux, espaco;
+int t = 0, j = 0, i = 0, k = 0, tam1, aux = 0, espaco;
 int pos_cont = 0, pos_contaux = 0, lin_cont = 0; //Contadores de posicao (Para verificacoes de instrucoes e contador de linha)
 int flagsec = 0, fbegin = 0, fend = 0, flagp = 1, flagel = 0, flages = 0, flaginst = 0, flagrot = 0, flagaux1 = 0, flagaux2 = 0, flagpos = 0, flagaux3 = 0, flagstop = 0;
 /*
@@ -909,20 +912,71 @@ bool eh_diretiva, eh_simb, constante; //Variavel para verificar se eh diretiva
 int valor_const; //Variavel para verificar o valor de um operando constante
 size_t pos1;
 
-cout << "Digite o nome do arquivo que deseja abrir: ";
 getline (cin, nome);
 tam1 = nome.length();
-for(t=tam1-4;t<tam1;t++) {
-     nometemp += nome.at(t);
+
+for(i=0;i<tam1;i++) { //Pegando diretiva de processamento (-p ou -o)
+    if(nome.at(i) == ' '){
+        k = i;
+        for(i=k;i<tam1;i++) {
+            if(nome.at(i) != ' ') {
+                k = i;
+                break;
+            }
+        }
+        break;
+    }
+    straux1+= nome.at(i);
 }
-
-
-if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verificando se o arquivo esta no formato correto
-    ifstream arquivo1 (nome.c_str());
-    fstream saida ("Saida.o", ios::out);
-    if(saida.is_open() && arquivo1.is_open()) {
-    Preprocessador(arquivo1, errolist, linls);
-    ifstream arquivo("Preproc.pre");
+if(straux1 != "-o" && straux1 != "-p") {
+    cout << "Diretiva de processamento invalida" << endl;
+    return 1;
+}
+for(i=k;i<tam1;i++) { //Pegando nome do arquivo de entrada
+    if(nome.at(i) == ' '){
+        k = i;
+        for(i=k;i<tam1;i++) {
+            if(nome.at(i) != ' ') {
+                k = i;
+                break;
+            }
+        }
+        break;
+    }
+    straux2 += nome.at(i);
+}
+aux = straux2.length();
+for(t=aux-4;t<aux;t++) {
+     nometemp1 += straux2.at(t);
+}
+for(i=k;i<tam1;i++) { //Pegando nome do arquivo de saida
+    if(nome.at(i) == ' '){
+        k = i;
+        for(i=k;i<tam1;i++) {
+            if(nome.at(i) != ' ') {
+                k = i;
+                break;
+            }
+        }
+        break;
+    }
+    straux3 += nome.at(i);
+}
+if(straux1 == "-o"){
+    straux3 += ".o";
+    saidastr = straux3;
+if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verificando se o arquivo esta no formato correto
+    fstream arquivo (straux2.c_str(), ios::in);
+    fstream saida (straux3.c_str(), ios::out);
+    if(saida.is_open() && arquivo.is_open()) {
+    straux3.erase(straux3.length()-1,1);
+    Preprocessador(arquivo, errolist, linls, straux2);
+    arquivo.clear();
+    arquivo.close();
+    straux2.erase(straux2.length()-3,3);
+    straux2 += "pre";
+    entrada = straux2;
+    fstream arquivo(straux2.c_str(),ios::in);
 //**************************************************** PRIMEIRA PASSAGEM ****************************************************
          /*Aqui espera-se que a primeira linha seja a diretiva SECTION TEXT ou BEGIN. Se for BEGIN,
            procurar por SECTION TEXT. Em ambos os casos deve-se verificar se esta ultima existe.Se
@@ -930,6 +984,13 @@ if(nometemp.compare(".pre") == 0 || nometemp.compare(".asm") == 0) { // Verifica
             de texto faltante. Alem disso, faz-se as analises lexica, sintatica e semantica para cada
             linha */
         flagp = 1;
+        straux1.clear();
+        straux2.clear();
+        straux3.clear();
+        i = 0;
+        k = 0;
+        t = 0;
+        aux = 0;
         while(getline(arquivo,line)) {
             lin_cont++; //Incrementando contador de linha
         if(linls.primeiralinha != NULL) {
@@ -1436,8 +1497,9 @@ j = 0;
 k = 0;
 t = 0;
 pos_cont = 0;
+
 while(getline(arquivo,line)){
-            //cout << line << endl;
+            cout << line << endl;
             eh_diretiva = false;
             constante = false;
             eh_simb = false;
@@ -1478,7 +1540,9 @@ while(getline(arquivo,line)){
                                     TR.insere_el(1);
                                     insere_TU(simb, TabUso, pos_cont, token1);
                                     pos_cont++;
-                                }
+                            } else {
+                                errolist.insere_erro(17,lin_cont);
+                            }
                         } else if (opcode == "-1" && eh_diretiva == false) {
                             opcode = inst.busca_instrucao(token1, pos_contaux, lin_cont, errolist);
                             if(opcode == "14" ) { //Se for a instrucao STOP
@@ -1505,10 +1569,6 @@ while(getline(arquivo,line)){
                             i++;
                         }
                         token1.clear();
-                      //  if(line.length() == i+1 && opcode != "-1") {//Se o simbolo nao for de um digito
-                        //    i--;
-                        //}
-                       // cout << "token: " << token1 << endl;
                     } else if(line.at(i) == ':') { //Se encontrou rotulo, ignorar
                         j = i+1;
                         for(i=j;i<line.length();i++) { //Indo para o proximo token
@@ -1609,6 +1669,54 @@ while(getline(arquivo,line)){
     //}
 //}
 //*********************************************** FIM DA SEGUNDA PASSAGEM ***************************************************
+
+//********************************************** GRAVACAO NO ARQUIVO DE SAIDA *************************************************
+if(errolist.erro1 == NULL) { //Se nao houver eros, gravar no arquivo de saida
+if(flagaux1 == 1 && flagaux3 == 1) {
+saida << "TABLE USE"; //Gravando Tabela de Uso
+saida << endl;
+TU_out(saida,TabUso);
+
+saida << "TABLE DEFINITION"; //Gravando Tabela de Definicoes
+saida << endl;
+TD_out(saida,defin);
+
+saida << "TABLE REALOCATION"; //Gravando Tabela de Realocacao
+saida << endl;
+TR_out(saida,TR);
+if(TR.first != NULL){
+    saida << endl;
+}
+saida << "CODE"; //Gravando codigo
+saida << endl;
+}
+saida << outline;
+} else {
+saida.close();
+saida.clear();
+remove(saidastr.c_str());
+arquivo.close();
+arquivo.clear();
+remove(entrada.c_str());
+}
+//***************************************************** FIM DA GRAVACAO *******************************************************
+
+} else {
+    cout << "Arquivo nao foi aberto corretamente" << endl;
+}
+} else {
+    cout << "Arquivo de entrada nao esta no formato correto" << endl;
+}
+} else if (straux1 == "-p") {
+    straux3 += ".pre";
+if(nometemp1.compare(".asm") == 0) { // Verificando se o arquivo esta no formato correto
+    fstream arquivo (straux2.c_str(), ios::in);
+    fstream saida (straux3.c_str(), ios::out);
+    if(saida.is_open() && arquivo.is_open()) {
+        Preprocessador(arquivo, errolist, linls, straux2);
+    }
+} else {
+    cout << "Preprocessamento deve receber arquivos no formato .pre" << endl;
 }
 }
 errolist.limpa_listae(); //*
@@ -1871,7 +1979,7 @@ void simb_to_def (Simbolo_Tab s,Def_Tab &d) { //Passa simbolos da TS para a TD
 }
 
 //******************************************************** PRE-PROCESSADOR ****************************************************
-void Preprocessador(istream &file, lista_erro &LE, lista_linhas &LL) {
+void Preprocessador(istream &file, lista_erro &LE, lista_linhas &LL, string nomearq) {
 EQU_List no; //Objeto da lista da diretiva EQU
 string str, linha, strtemp;
 string token, token1, token2, dir, linhaout, linhain, aux, aux2, aux3;
@@ -1884,7 +1992,9 @@ string valor; //Variavel para valor associado ao rotulo na lista da diretiva EQU
 int posit = 0; //Inteiro para pegar posicao das diretivas IF, CONST e SPACE
 size_t pos; //Necessario para funcao str.find()
 
-ofstream out("Preproc.pre");
+nomearq.erase(nomearq.length()-3,3);
+nomearq += "pre";
+ofstream out(nomearq.c_str());
     while(getline(file,linha)) {
         pos = linha.find("\t");
         posit = pos;
@@ -2159,6 +2269,8 @@ ofstream out("Preproc.pre");
     }
 //*******************************************************************************************************************************
 no.limpa_lista();
+out.close();
+out.clear();
 }
 //****************************************************** FIM DO PRE PROCESSADOR ***********************************************
 
@@ -2169,6 +2281,7 @@ void insere_TU (Simbolo_Tab TS, TU &usot, int post, string tk) {
     Simb_TU *tu = new Simb_TU();
     Simb_TU *tuaux = new Simb_TU();
     stringstream conv;
+    string auxilia;
     while(simbaux != NULL) {
         if(simbaux->Retorna_rot() == tk) {
             break;
@@ -2178,10 +2291,13 @@ void insere_TU (Simbolo_Tab TS, TU &usot, int post, string tk) {
     if(simbaux->Retorna_ext() == true) {
         conv.str("");
         conv.clear();
+        if(post < 10)
+            auxilia += '0';
         if(usot.symb1 == NULL) {
             tu->Define_symbol(tk);
             conv << post;
-            tu->Define_value(conv.str());
+            auxilia += conv.str();
+            tu->Define_value(auxilia);
             tu->Define_psymb(NULL);
             usot.symb1 = tu;
         } else {
@@ -2191,7 +2307,8 @@ void insere_TU (Simbolo_Tab TS, TU &usot, int post, string tk) {
             }
             tuaux->Define_symbol(tk);
             conv << post;
-            tuaux->Define_value(conv.str());
+            auxilia += conv.str();
+            tuaux->Define_value(auxilia);
             tuaux->Define_psymb(NULL);
             tu->Define_psymb(tuaux);
         }
@@ -2199,3 +2316,45 @@ void insere_TU (Simbolo_Tab TS, TU &usot, int post, string tk) {
 }
 
 //*******************************************************************************************************************************
+
+void TU_out (ostream& fileout, TU Tabuso) { //Funcao para gravar Tabela de Uso no arquivo de saida
+    Simb_TU *simbu = new Simb_TU();
+    simbu = Tabuso.symb1;
+    if(simbu != NULL) {
+        while(simbu != NULL) {
+            fileout << simbu->Return_symbol();
+            fileout << ' ';
+            fileout << simbu->Return_value();
+            fileout << endl;
+            simbu = simbu->Return_psymb();
+        }
+        fileout << endl;
+    }
+}
+
+void TD_out (ostream& fileout, Def_Tab Tabdef) { //Funcao para gravar Tabela de Uso no arquivo de saida
+    Definicao *df = new Definicao();
+    df = Tabdef.def1;
+    if(df != NULL) {
+        while(df != NULL) {
+            fileout << df->Retorna_def();
+            fileout << ' ';
+            fileout << df->Retorna_valdef();
+            fileout << endl;
+            df = df->Retorna_prox_def();
+        }
+        fileout << endl;
+    }
+}
+
+void TR_out (ostream& fileout, Rtab RT) { //Funcao para gravar Tabela de Uso no arquivo de saida
+    elemento *el = new elemento();
+    el = RT.first;
+    if(el != NULL) {
+        while(el != NULL) {
+            fileout << el->Return_ar();
+            el = el->Return_proxel();
+        }
+        fileout << endl;
+    }
+}
