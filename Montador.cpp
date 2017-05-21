@@ -1435,6 +1435,7 @@ i = 0;
 j = 0;
 k = 0;
 t = 0;
+pos_cont = 0;
 while(getline(arquivo,line)){
             //cout << line << endl;
             eh_diretiva = false;
