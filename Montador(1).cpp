@@ -2120,7 +2120,7 @@ ofstream out(nomearq.c_str());
 
 //*******************************************************************************************************************************
         if(flagcopy != 2)
-            linhain.erase(linhain.length()-1,1); //Apagando espaço restante no final da linha
+            linhain.erase(linhain.length()-1,1); //Apagando espaÃ§o restante no final da linha
         flagcopy = 0;
         pos = linhain.find("BEGIN");
         posit = pos;
