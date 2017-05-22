@@ -1,0 +1,19 @@
+SO: Windows
+Para compilar o montador:
+- Utilizar g++ da biblioteca MinGW (já inclusa na pasta do CodeBlocks [provavelmente localizada em C:\Program Files (x86)\CodeBlocks\MinGW]), localizado na pasta bin (C:\Program Files (x86)\CodeBlocks\MinGW\bin, se instalado o codeblocks).
+
+- Comandos:
+	cd [diretorio da pasta bin do MinGW]
+	g++ -ansi -Wall -std=c++11 [Diretorio do programa Montador.cpp]\Montador.cpp -o [Diretorio onde deve-se criar o executavel]\[nome do executável].exe
+**Caso tenha o codeblocks utilizar MinGW do Codeblocks
+
+- Executar montador: [nome do arquivo executavel].exe (Estando no diretorio deste mesmo arquivo)
+
+- Dentro do programa montador:
+	-o [caminho para o arquivo .asm ou .pre](nome do arquivo de entrada).asm (ou .pre) [Caminho para o arquivo objeto a ser gerado](nome do arquivo objeto)
+	Exemplo: arquivo bin.asm no Desktop e arquivo objeto binobjeto gerado no Desktop
+						-o C:\Desktop\bin.asm C:\Desktop\binobjeto
+
+	
+
+

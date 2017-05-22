@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdlib.h>
 #include <cctype>
+#include <cwctype>
 
 using namespace std;
 
@@ -62,14 +63,15 @@ string EQU_List::busca_no (string label, bool& exist) { //Busca no na lista
         if(tmp->Return_rot() == label) { //Se tiver rotulo == label, retornar valor associado e coloca flag exist em true
             tmpval = tmp->Return_val();
             *aux = true;
-            return tmpval;
             break;
         }
         tmp = tmp->Return_prox_rot();
     }
     if(tmp == NULL) {
         *aux = false;
+        return "";
     }
+        return tmpval;
 }
 
 void EQU_List::limpa_lista () {
@@ -84,7 +86,6 @@ void EQU_List::limpa_lista () {
         tmp = head;
     } while(tmp != NULL);
 }
-
 //*********************************************** FIM DA LISTA EQU *******************************************************
 
 //**************************************** TABELA DE SIMBOLOS ****************************************************************
@@ -113,19 +114,10 @@ class Simbolo_Tab { //Lista para as definicoes das diretivas EQU
             primeiro = NULL;
         }
         void inseresimb_final (string,string,bool); //Insere no no final da tabela
-        void imprime_simb();
         string busca_simb (string,bool&); //Busca no na lista a partir do rotulo
         void limpa_tabelasimb();
         bool eh_externo(string);
 };
-
-void Simbolo_Tab::imprime_simb() {
-     Simbolo *nov = primeiro;
-    while(nov != NULL) {
-    cout << nov->Retorna_rot() << " = " << nov->Retorna_val() << endl;
-    nov = nov->Retorna_proximo_rot();
-    }
-}
 
 void Simbolo_Tab::inseresimb_final (string rotulo1, string valor1, bool ext1) {
     string aux;
@@ -160,11 +152,14 @@ string Simbolo_Tab::busca_simb (string rot2, bool& existe) { //Busca no na lista
         if(tmp->Retorna_rot() == rot2) { //Se tiver rotulo == rot2, retornar valor associado e coloca flag exist em true
             tmpval = tmp->Retorna_val();
             *aux = true;
-            return tmpval;
             break;
         }
         tmp = tmp->Retorna_proximo_rot();
     }
+    if(tmp == NULL) {
+        return "";
+    }
+        return tmpval;
 }
 
 void Simbolo_Tab::limpa_tabelasimb () {
@@ -185,18 +180,19 @@ bool Simbolo_Tab::eh_externo(string tok) {
     sb = primeiro;
     while(sb != NULL) {
         if(sb->Retorna_rot() == tok) {
-            if(sb->Retorna_ext() == true) {
-                return true;
-            } else {
-                return false;
-            }
             break;
         }
         sb = sb->Retorna_proximo_rot();
     }
-    if(sb == NULL) {
+        if(sb == NULL) {
+            return false;
+        }
+        if(sb->Retorna_rot() == tok) {
+            if(sb->Retorna_ext() == true) {
+                return true;
+            }
+        }
         return false;
-    }
 }
 
 //****************************************** FIM DA TABELA DE SIMBOLOS *********************************************************
@@ -205,13 +201,13 @@ bool Simbolo_Tab::eh_externo(string tok) {
 
 class erro {
     int flag_erro;
-    int linha_num;
+    unsigned int linha_num;
     erro *prox_erro;
 public:
     erro() {};
-    Define_flag (int flag) {flag_erro = flag;}
-    Define_linha (int numl) {linha_num = numl;}
-    Define_proxerro (erro *proxe) {prox_erro = proxe;}
+    void Define_flag (int flag) {flag_erro = flag;}
+    void Define_linha (unsigned int numl) {linha_num = numl;}
+    void Define_proxerro (erro *proxe) {prox_erro = proxe;}
     int Return_flag() {return flag_erro;}
     int Return_linha() {return linha_num;}
     erro* Return_proxerro() {return prox_erro;}
@@ -223,12 +219,12 @@ class lista_erro {
     lista_erro () {
         erro1 = NULL;
     }
-    void insere_erro (int,int);
+    void insere_erro (int,unsigned int);
     void imprime_erros();
     void limpa_listae();
 };
 
-void lista_erro::insere_erro(int flage, int numline) {
+void lista_erro::insere_erro(int flage, unsigned int numline) {
    erro *novo_erro;
    erro *p = new erro();
    p = erro1;
@@ -454,7 +450,7 @@ class Lista_Instrucoes {
             Instrucao1 = NULL;
         }
         void inserefinal_instrucao (string,string,int); //Insere instrucao na lista
-        string busca_instrucao (string,int&,int,lista_erro&); //Busca instrucao na lista
+        string busca_instrucao (string,unsigned int&,unsigned int,lista_erro&); //Busca instrucao na lista
         void limpa_lista_inst ();
 };
 
@@ -501,7 +497,7 @@ void Lista_Instrucoes::inserefinal_instrucao(string name, string op, int operand
     }
 }
 
-string Lista_Instrucoes::busca_instrucao(string name, int &contador_pos, int contador_lin, lista_erro &lerro) {
+string Lista_Instrucoes::busca_instrucao(string name, unsigned int &contador_pos, unsigned int contador_lin, lista_erro &lerro) {
     Instrucao *tmp = Instrucao1;
     int tmpval;
     int flag_inst = 0;
@@ -543,9 +539,9 @@ class numerolinha {
     string conteudo;
     numerolinha *prox_lin;
 public:
-    Define_linum (int lin) {linum = lin;}
-    Define_proxlin (numerolinha *proxli) {prox_lin = proxli;}
-    Define_cont (string cont) {conteudo = cont;}
+    void Define_linum (int lin) {linum = lin;}
+    void Define_proxlin (numerolinha *proxli) {prox_lin = proxli;}
+    void Define_cont (string cont) {conteudo = cont;}
     int Return_linum() {return linum;}
     string Return_cont() {return conteudo;}
     numerolinha* Return_proxlin() {return prox_lin;}
@@ -558,7 +554,7 @@ class lista_linhas {
         primeiralinha = NULL;
     }
     void insere_numerolin(int,string);
-    void busca_listalinhas (int&,lista_linhas&,string,int);
+    void busca_listalinhas (unsigned int&,lista_linhas&,string,int);
     void limpa_listalin();
 };
 
@@ -597,7 +593,7 @@ void lista_linhas::insere_numerolin(int linum1, string cont1) {
    }
 }
 
-void lista_linhas::busca_listalinhas (int &lcont, lista_linhas &ll, string cont2, int fgp) {
+void lista_linhas::busca_listalinhas (unsigned int &lcont, lista_linhas &ll, string cont2, int fgp) {
     numerolinha *new_linha = new numerolinha();
     new_linha = primeiralinha;
     numerolinha *tp = new numerolinha();
@@ -712,26 +708,24 @@ void Dados::insere_dados(string rnm, bool ec, int vc, int sp) {
 }
 bool Dados::ehconst(string rnm1, int &vc1, bool &ehc) {
     Rotulo *new_rn = rn1;
-    Rotulo *tp;
     while(new_rn != NULL) {
         if(new_rn->Return_rname() == rnm1) {
             vc1 = new_rn->Return_valconst();
             ehc = new_rn->Return_const();
-            return new_rn->Return_const();
             break;
         }
         new_rn = new_rn->Return_proxrn();
     }
     if(new_rn == NULL) {
         ehc = false;
+        return false;
     }
+        return new_rn->Return_const();
 }
 int Dados::space(string rnm2) {
     Rotulo *new_rn1 = rn1;
-    Rotulo *tp;
     while(new_rn1 != NULL) {
         if(new_rn1->Return_rname() == rnm2) {
-            return new_rn1->Return_space();
             break;
         }
         new_rn1 = new_rn1->Return_proxrn();
@@ -739,6 +733,7 @@ int Dados::space(string rnm2) {
     if(new_rn1 == NULL) {
         return 1;
     }
+        return new_rn1->Return_space();
 }
 
 void Dados::limpa_dados() {
@@ -868,7 +863,7 @@ void Rtab::limpa_rt() {
 //**************************************** FIM DA DEFINICAO DE LISTAS **********************************************
 
 //************************************** PROTOTIPOS **************************************************************************
-void Diretivas(string, Rtab&, TU&, Dados&, string, string, int&, int&, int&, Simbolo_Tab&, int, lista_erro&, Def_Tab&, int, string&, int&, bool&, int);
+void Diretivas(string, Rtab&, TU&, Dados&, string, string, unsigned int&, int&, int&, Simbolo_Tab&, int, lista_erro&, Def_Tab&, unsigned int, string&, int&, bool&, int);
 void cria_LI(Lista_Instrucoes&);
 void cria_TS(Simbolo_Tab&);
 void simb_to_def (Simbolo_Tab,Def_Tab&);
@@ -893,9 +888,10 @@ string nome, nometemp1, rotulo; //strings usadas para abrir o arquivo e verifica
 string line, outline; //strings utilizadas para as linhas
 string straux1, straux2, straux3, straux4, opcode = "-1", token1, saidastr, entrada;
 stringstream conversao;
-int t = 0, j = 0, i = 0, k = 0, tam1, aux = 0, espaco;
-int pos_cont = 0, pos_contaux = 0, lin_cont = 0; //Contadores de posicao (Para verificacoes de instrucoes e contador de linha)
-int flagsec = 0, fbegin = 0, fend = 0, flagp = 1, flagel = 0, flages = 0, flaginst = 0, flagrot = 0, flagaux1 = 0, flagaux2 = 0, flagpos = 0, flagaux3 = 0, flagstop = 0;
+unsigned int t = 0, j = 0, i = 0, k = 0,tam1, aux = 0;
+int espaco;
+unsigned int pos_cont = 0, pos_contaux = 0, lin_cont = 0; //Contadores de posicao (Para verificacoes de instrucoes e contador de linha)
+int flagsec = 0, fbegin = 0, fend = 0, flagp = 1, flagel = 0, flagaux1 = 0, flagaux2 = 0, flagpos = 0, flagaux3 = 0, flagstop = 0;
 /*
 flagsec - flag para verificacao da diretiva SECTION
 fbegin - flag para verificacao da diretiva BEGIN
@@ -997,8 +993,6 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
             linls.busca_listalinhas(lin_cont,linls,line,flagp);
         }
             flagel = 0; //Zerando flags e contadores
-            flages = 0;
-            flagrot = 0;
             flagsec = 0;
             fbegin = 0;
             i = 0;
@@ -1007,7 +1001,7 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
             j = 0;
             token1.clear();
             rotulo.clear();
-            eh_diretiva == false;
+            eh_diretiva = false;
             eh_simb = false;
 
             for(i=0;i<line.length();i++) {
@@ -1059,11 +1053,9 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
                     flagaux2 = flagsec;
                     break;
                 } else if(flagsec == 3) {
-                    flages = 1;
                     continue;
                 }
                     if(line.at(i) == ':') { //Se eh rotulo, verificar se nao tem outro rotulo na mesma linha
-                        flagrot = 1;
                         for(j=k;j<line.length();j++) {
                             if(line.at(j) != ' ' && line.at(j) != ':') { //Existe outro token
                                 for(t=j;t<line.length();t++) {
@@ -1163,13 +1155,11 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
                                                                     //(Caso primeiro token seja valido)
                                     if(opcode != "09") { //Se nao for COPY nao deve ter 2 operandos
                                         errolist.insere_erro(3, lin_cont);
-                                        flages = 1;
                                     }
                                     token1.clear();
                                     for(i=k;i<line.length();i++) { //Pegando o segundo operando
                                         if(line.at(i) == ' ') {
                                             errolist.insere_erro(3,lin_cont);
-                                            flages = 1;
                                         }
                                         token1 += line.at(i);
                                     }
@@ -1222,8 +1212,6 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
             if(linls.primeiralinha != NULL)
                 linls.busca_listalinhas(lin_cont,linls,line,flagp);
             flagel = 0; //Zerando flags e contadores
-            flages = 0;
-            flagrot = 0;
             flagsec = 0;
             fbegin = 0;
             i = 0;
@@ -1284,7 +1272,6 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
                 }
                 if(k == line.length() && flagsec == 0) { //Se a linha acabou ou nao eh a diretiva SECTION
                     errolist.insere_erro(7, lin_cont); //Se a linha acabou, nao existe outro token. Logo, gerar erro
-                    flages = 1;
                 } else if(flagsec == 1) {
                     errolist.insere_erro(6, lin_cont);
                     flagaux2 = flagsec;
@@ -1293,11 +1280,9 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
                     flagaux2 = flagsec;
                     continue;
                 } else if(flagsec == 3) {
-                    flages = 1;
                     continue;
                 }
                     if(line.at(i) == ':') { //Se eh rotulo, verificar se nao tem outro rotulo na mesma linha
-                        flagrot = 1;
                         for(j=k;j<line.length();j++) {
                             if(line.at(j) != ' ' && line.at(j) != ':') { //Existe outro token
                                 for(t=j;t<line.length();t++) {
@@ -1420,17 +1405,14 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
                                     pos_cont++;                     //(Caso primeiro token seja valido)
                                     if(pos_cont != pos_contaux) {
                                         errolist.insere_erro(3, lin_cont);
-                                        flages = 1;
                                     }
 
                                     token1.clear();
                                     for(j=k;j<line.length();j++) { //Pegando o segundo operando
                                         if(line.at(j) == ' ' && line.at(i) != ',') { //Caso nao seja a instrucao COPY
                                             errolist.insere_erro(3,lin_cont);
-                                            flages = 1;
                                         } else if (line.at(j) == ' ' && line.at(i) == ',') {
                                             errolist.insere_erro(5,lin_cont);
-                                            flages = 1;
                                         }
                                         if(line.at(j) != ' ')
                                             token1 += line.at(j);
@@ -1476,17 +1458,12 @@ if(nometemp1.compare(".pre") == 0 || nometemp1.compare(".asm") == 0) { // Verifi
                     }
                 token1.clear();
             }
-        if(flagaux1 == 1 && flagaux3 == 0 || flagaux1 == 0 && flagaux3 == 1) {
+        if((flagaux1 == 1 && flagaux3 == 0) || (flagaux1 == 0 && flagaux3 == 1)) {
             errolist.insere_erro(12, lin_cont);
         }
         if(flagaux1 == 0 && flagaux3 == 0 && flagstop == 0) {
             errolist.insere_erro(13, lin_cont);
         }
-simb_to_def(simb,defin);
-cout << "TS" << endl;
-simb.imprime_simb();
-cout << "TD" << endl;
-defin.imprime_def();
 //*********************************************** FIM DA PRIMEIRA PASSAGEM **************************************************
 arquivo.clear();
 arquivo.seekg(0, ios::beg);
@@ -1499,7 +1476,6 @@ t = 0;
 pos_cont = 0;
 
 while(getline(arquivo,line)){
-            cout << line << endl;
             eh_diretiva = false;
             constante = false;
             eh_simb = false;
@@ -1547,7 +1523,6 @@ while(getline(arquivo,line)){
                             opcode = inst.busca_instrucao(token1, pos_contaux, lin_cont, errolist);
                             if(opcode == "14" ) { //Se for a instrucao STOP
                                 TR.insere_el(0);
-                                flaginst = 1;
                                 outline += opcode;
                                 outline += ' ';
                                 pos_cont++;
@@ -1652,24 +1627,8 @@ while(getline(arquivo,line)){
             }
             token1.clear();
         }
-        //if(errolist.erro1 != NULL) {
-          //  remove("Saida.o");
-        //} else {
-          cout << "CODE" << endl;
-          outline.erase(outline.length()-1,1);
-          cout << outline << endl;
-          cout << "TU" << endl;
-          TabUso.imprime_TU();
-          cout << "TR" << endl;
-          TR.imprime_elem();
-          cout << endl;
-          cout << "ERROS" << endl;
-          errolist.imprime_erros();
-        //}
-    //}
-//}
 //*********************************************** FIM DA SEGUNDA PASSAGEM ***************************************************
-
+errolist.imprime_erros();
 //********************************************** GRAVACAO NO ARQUIVO DE SAIDA *************************************************
 if(errolist.erro1 == NULL) { //Se nao houver eros, gravar no arquivo de saida
 if(flagaux1 == 1 && flagaux3 == 1) {
@@ -1728,7 +1687,7 @@ return 0;
 }
 
 //****************************************************************************************** LISTA DE DIRETIVAS ******************************************************************************************************************************************************
-void Diretivas(string rot, Rtab &TR1, TU &tabu, Dados &D, string nom, string line, int &cont_pos, int &flagbegin, int &flagend, Simbolo_Tab &tabs, int flagpas, lista_erro &lerr, Def_Tab &defs, int contlinha, string &lin_saida, int &flags, bool &diretiva_verif, int flaga) {
+void Diretivas(string rot, Rtab &TR1, TU &tabu, Dados &D, string nom, string line, unsigned int &cont_pos, int &flagbegin, int &flagend, Simbolo_Tab &tabs, int flagpas, lista_erro &lerr, Def_Tab &defs, unsigned int contlinha, string &lin_saida, int &flags, bool &diretiva_verif, int flaga) {
     /*
     Argumentos:
     rot - Rotulo (se houver)
@@ -1746,10 +1705,11 @@ void Diretivas(string rot, Rtab &TR1, TU &tabu, Dados &D, string nom, string lin
     flags - flag da diretiva SECTION
     flaga - flagauxiliar
     */
-    int i, i1; //contador
+    unsigned int i; //contador
     string stringaux, auxl, auxl2;
     size_t posic; //Utilizada na instrucao find
-    int num, pos;
+    unsigned int num;
+    int pos;
     stringstream hexadec, convert; //Usadas para converter hexadecimal para decimal e int para char
     hexadec.str("");
     hexadec.clear();
@@ -1788,7 +1748,6 @@ void Diretivas(string rot, Rtab &TR1, TU &tabu, Dados &D, string nom, string lin
             posic += 6;
             for(i=posic;i<line.length();i++) {
                 if(line.at(i) == ' ') {
-                    i1 = i;
                     break;
                 }
                 auxl += line.at(i);
@@ -1855,7 +1814,9 @@ void Diretivas(string rot, Rtab &TR1, TU &tabu, Dados &D, string nom, string lin
                 auxl += line.at(i);
             }
             if(auxl.length() > 1) {
-            if(auxl.find("X") > -1) { //Se o numero for hexadecimal, converter para decimal e gravar na saida
+            posic = auxl.find("X");
+            pos = posic;
+            if(pos > -1) { //Se o numero for hexadecimal, converter para decimal e gravar na saida
                 if(auxl.at(0) == '0') {
                     for(i=2;i<4;i++) {
                         auxl2 += auxl.at(i);
@@ -1984,9 +1945,8 @@ EQU_List no; //Objeto da lista da diretiva EQU
 string str, linha, strtemp;
 string token, token1, token2, dir, linhaout, linhain, aux, aux2, aux3;
 string equ, rotulo, valorstr; //strings para abrir arquivo, guardar linhas, verificacoes de linhas e diretivas
-int tam1, tam2, tam3, i, j, k, t, cont, erro_count = 0, linhacont = 0; //Contadores e variaveis para tamanho de linha
+unsigned int i, j, k, tam2, tam3, linhacont = 0; //Contadores e variaveis para tamanho de linha
 int flagrotulo = 0, flagIF1 = 0, flagIF2 = 0, flagsection = 0, flagcopy = 0; //Flag para verificar erros, se existe rotulo, flags para diretiva IF, flag para verificar se o programa esta na ordem correta e flag para instrucao COPY
-int *flag;
 bool eh_rotulo = false; //Variavel para definir se pertence a lista da diretiva EQU
 string valor; //Variavel para valor associado ao rotulo na lista da diretiva EQU
 int posit = 0; //Inteiro para pegar posicao das diretivas IF, CONST e SPACE
@@ -2208,8 +2168,8 @@ ofstream out(nomearq.c_str());
                     posit = pos;
                     if(posit > -1) {
                         k = 0;
-                        //if(flagsection == 1)
-                            //LE.insere_erro(4, linhacont);
+                        if(flagsection == 1)
+                            LE.insere_erro(4, linhacont);
                         for(i=k;i<tam3;i++) {
                             if(linhain.at(i) == ' ')
                                 LE.insere_erro(2,linhacont);
